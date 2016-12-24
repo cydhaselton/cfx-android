@@ -1,5 +1,6 @@
 project(System.Net.Http.Native)
 
+add_definitions(-D__ANDROID__)
 find_package(CURL)
 if(NOT CURL_FOUND)
     message(FATAL_ERROR "!!! Cannot find libcurl and System.Net.Http.Native cannot build without it. Try installing libcurl4-openssl-dev (or the appropriate package for your platform) !!!")

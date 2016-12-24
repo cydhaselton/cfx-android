@@ -7,7 +7,7 @@
 #include "pal_io.h"
 #include "pal_utilities.h"
 #include "pal_safecrt.h"
-
+#include <semaphore.h>
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <sys/time.h>
+#include <linux/time.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #include <sys/ioctl.h>
@@ -292,7 +292,7 @@ extern "C" intptr_t SystemNative_ShmOpen(const char* name, int32_t flags, int32_
 extern "C" int32_t SystemNative_ShmUnlink(const char* name)
 {
     int32_t result;
-    while (CheckInterrupted(result = shm_unlink(name)));
+    while (CheckInterrupted(result = sem_unlink(name)));
     return result;
 }
 
@@ -573,11 +573,11 @@ extern "C" int32_t SystemNative_Link(const char* source, const char* linkTarget)
     while (CheckInterrupted(result = link(source, linkTarget)));
     return result;
 }
-
-extern "C" intptr_t SystemNative_MksTemps(char* pathTemplate, int32_t suffixLength)
+//in Android function is mkstemp with one arg
+extern "C" intptr_t SystemNative_MksTemps(char* pathTemplate)
 {
     intptr_t result;
-    while (CheckInterrupted(result = mkstemps(pathTemplate, suffixLength)));
+    while (CheckInterrupted(result = mkstemp(pathTemplate)));
     return  result;
 }
 
@@ -1079,15 +1079,17 @@ extern "C" int32_t SystemNative_CopyFile(intptr_t sourceFd, intptr_t destination
 
     // Now that the data from the file has been copied, copy over metadata
     // from the source file.  First copy the file times.
+    // NOTE: ANDROID uses timespec not timeval with function futimens, not futimes
+    // in android struct timespec has tv_nsec, not tv_usec
     while (CheckInterrupted(ret = fstat_(inFd, &sourceStat)));
     if (ret == 0)
     {
-        struct timeval origTimes[2];
+        struct timespec origTimes[2];
         origTimes[0].tv_sec = sourceStat.st_atime;
-        origTimes[0].tv_usec = 0;
+        origTimes[0].tv_nsec = 0;
         origTimes[1].tv_sec = sourceStat.st_mtime;
-        origTimes[1].tv_usec = 0;
-        while (CheckInterrupted(ret = futimes(outFd, origTimes)));
+        origTimes[1].tv_nsec = 0;
+        while (CheckInterrupted(ret = futimens(outFd, origTimes)));
     }
     if (ret != 0)
     {

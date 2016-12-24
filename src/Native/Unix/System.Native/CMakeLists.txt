@@ -18,7 +18,7 @@ set(NATIVE_SOURCES
     pal_time.cpp
     pal_uid.cpp
 )
-
+add_definitions(-D__ANDROID__)
 if (CMAKE_SYSTEM_NAME STREQUAL Linux)
     set(NATIVE_SOURCES ${NATIVE_SOURCES} pal_networkchange.cpp)
 

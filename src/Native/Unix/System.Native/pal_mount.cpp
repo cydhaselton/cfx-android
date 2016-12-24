@@ -37,7 +37,8 @@ static int32_t GetMountInfo(MountPointFound onFound)
 }
 
 #else
-
+//in android MNTOPT_RO must be defined
+    const char *MNTOPT_RO;
     int result = -1;
     FILE* fp = setmntent("/proc/mounts", MNTOPT_RO);
     if (fp != nullptr)

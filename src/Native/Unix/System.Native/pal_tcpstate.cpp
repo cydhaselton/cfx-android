@@ -8,7 +8,7 @@
 
 #if HAVE_TCP_FSM_H
 #include <netinet/tcp_fsm.h>
-#elif HAVE_TCP_H_TCPSTATE_ENUM
+#elif defined(__ANDROID__)
 #include <netinet/tcp.h>
 #else
 #error System must have TCP states defined in either tcp.h or tcp_fsm.h.
