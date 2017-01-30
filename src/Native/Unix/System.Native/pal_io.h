@@ -499,7 +499,8 @@ extern "C" int32_t SystemNative_Link(const char* source, const char* linkTarget)
  *
  * Returns a valid File Descriptor on success; otherwise, returns -1 and errno is set.
  */
-extern "C" intptr_t SystemNative_MksTemps(char* pathTemplate, int32_t suffixLength);
+ //for Android, mkstemps has one arg
+extern "C" intptr_t SystemNative_MksTemps(char* pathTemplate);
 
 /**
  * Map file or device into memory. Implemented as shim to mmap(2).

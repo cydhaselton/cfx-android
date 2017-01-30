@@ -7,6 +7,7 @@
 #include "pal_io.h"
 #include "pal_utilities.h"
 #include "pal_safecrt.h"
+#include "getdomainname.h"
 
 #include <stdlib.h>
 #include <pthread.h>
@@ -20,6 +21,7 @@
 #include <sys/time.h>
 #endif
 #include <errno.h>
+#include <ifaddrs.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -442,8 +444,8 @@ static void ConvertHostEntPlatformToPal(HostEntry& hostEntry, hostent& entry)
     }
 }
 
-#if !HAVE_THREAD_SAFE_GETHOSTBYNAME_AND_GETHOSTBYADDR
-#if !HAVE_GETHOSTBYNAME_R
+#if HAVE_THREAD_SAFE_GETHOSTBYNAME_AND_GETHOSTBYADDR
+#if HAVE_GETHOSTBYNAME_R
 static int copy_hostent(struct hostent* from, struct hostent* to,
                         char* buffer, size_t buflen)
 {
@@ -463,9 +465,9 @@ Note: we're assuming that all access to these functions are going through these 
       possible, for instance; if other libs (such as libcurl) call gethostby[name/addr] simultaneously.
 */
 static pthread_mutex_t lock_hostbyx_mutex = PTHREAD_MUTEX_INITIALIZER;
-
+// android termux-specific lwres impl of gethostbyname
 static int gethostbyname_r(char const* hostname, struct hostent* result,
-                           char* buffer, size_t buflen, hostent** entry, int* error)
+                           char* buffer, int entry, int* error)
 {
     assert(hostname != nullptr);
     assert(result != nullptr);
@@ -545,7 +547,7 @@ static int gethostbyaddr_r(const uint8_t* addr, const socklen_t len, int type, s
 #define HAVE_GETHOSTBYADDR_R 1
 #endif /* !HAVE_GETHOSTBYNAME_R */
 
-#if HAVE_GETHOSTBYNAME_R
+#if !HAVE_GETHOSTBYNAME_R
 static int GetHostByNameHelper(const uint8_t* hostname, hostent** entry)
 {
     assert(hostname != nullptr);
@@ -605,10 +607,10 @@ extern "C" int32_t SystemNative_GetHostByName(const uint8_t* hostname, HostEntry
     hostent* hostEntry = nullptr;
     int error = 0;
 
-#if HAVE_THREAD_SAFE_GETHOSTBYNAME_AND_GETHOSTBYADDR
+#if !HAVE_THREAD_SAFE_GETHOSTBYNAME_AND_GETHOSTBYADDR
     hostEntry = gethostbyname(reinterpret_cast<const char*>(hostname));
     error = h_errno;
-#elif HAVE_GETHOSTBYNAME_R
+#elif !HAVE_GETHOSTBYNAME_R
     error = GetHostByNameHelper(hostname, &hostEntry);
 #else
 #error Platform does not provide thread-safe gethostbyname
@@ -623,7 +625,7 @@ extern "C" int32_t SystemNative_GetHostByName(const uint8_t* hostname, HostEntry
     return PAL_SUCCESS;
 }
 
-#if !HAVE_THREAD_SAFE_GETHOSTBYNAME_AND_GETHOSTBYADDR && HAVE_GETHOSTBYADDR_R
+#if HAVE_THREAD_SAFE_GETHOSTBYNAME_AND_GETHOSTBYADDR && HAVE_GETHOSTBYADDR_R
 static int GetHostByAddrHelper(const uint8_t* addr, const socklen_t addrLen, int type, hostent** entry)
 {
     assert(addr != nullptr);
@@ -701,12 +703,14 @@ extern "C" int32_t SystemNative_GetHostByAddress(const IPAddress* address, HostE
         addrLen = sizeof(in6Addr);
         type = AF_INET6;
     }
-
+    //Android-specific lwres networking changes
+    const char *caddr = new char[addrLen];
     hostent* hostEntry = nullptr;
     int error = 0;
 
-#if HAVE_THREAD_SAFE_GETHOSTBYNAME_AND_GETHOSTBYADDR
-    hostEntry = gethostbyaddr(addr, addrLen, type);
+#if !HAVE_THREAD_SAFE_GETHOSTBYNAME_AND_GETHOSTBYADDR
+    caddr = reinterpret_cast<const char*>(addr);
+    hostEntry = gethostbyaddr(caddr, addrLen, type);
     error = h_errno;
 #elif HAVE_GETHOSTBYADDR_R
     error = GetHostByAddrHelper(addr, addrLen, type, &hostEntry);

@@ -1,6 +1,6 @@
 project(System.IO.Compression.Native)
 
-find_package(ZLIB REQUIRED)
+#find_package(ZLIB REQUIRED)
 
 set(NATIVECOMPRESSION_SOURCES
     pal_zlib.cpp
@@ -14,6 +14,7 @@ add_library(System.IO.Compression.Native
 
 target_link_libraries(System.IO.Compression.Native
     ${ZLIB_LIBRARIES}
+    zopfli
 )
 
 install_library_and_symbols (System.IO.Compression.Native)
