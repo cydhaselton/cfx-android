@@ -32,5 +32,8 @@
     <OfficialBuildRID Include="tizen.4.0.0-armel">
       <Platform>armel</Platform>
     </OfficialBuildRID>
+    <OfficialBuildRID Include="android.21-arm64">
+      <Platform>arm64</Platform>
+    </OfficialBuildRID>
   </ItemGroup>
 </Project>

@@ -18,6 +18,7 @@
     <Ubuntu1610NativePath Condition="'$(Ubuntu1610NativePath)' == ''">$(LinuxNativePath)</Ubuntu1610NativePath>
     <Alpine343NativePath Condition="'$(Alpine343NativePath)' == ''">$(LinuxNativePath)</Alpine343NativePath>
     <Tizen400NativePath Condition="'$(Tizen400NativePath)' == ''">$(LinuxNativePath)</Tizen400NativePath>
+    <Android21NativePath Condition="'$(Android21NativePath)' == ''">$(LinuxNativePath)</Android21NativePath>
     <SkipPackageFileCheck>true</SkipPackageFileCheck>
   </PropertyGroup>
 </Project>

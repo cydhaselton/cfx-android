@@ -15,6 +15,7 @@ usage()
     echo.
     echo "By default, the NDK will be downloaded into the cross/android-rootfs/android-ndk-$__NDK_Version directory. If you already have an NDK installation,"
     echo "you can set the NDK_DIR environment variable to have this script use that installation of the NDK."
+    echo "By default, this script will generate a file, android_platform, in the rootof the ROOTFS_DIR directory that contains the RID for the supported and tested Android build: android.21-arm64. This file is to replace '/etc/os-release', which is not available for Android."
     exit 1
 }
 
@@ -86,27 +87,32 @@ echo Generating the $__BuildArch toolchain
 $__NDK_Dir/build/tools/make_standalone_toolchain.py --arch $__BuildArch --api $__ApiLevel --install-dir $__ToolchainDir
 
 # Install the required packages into the toolchain
+# TODO: Add logic to get latest pkg version instead of specific version number
 rm -rf $__Android_Cross_Dir/deb/
 rm -rf $__Android_Cross_Dir/tmp
 
 mkdir -p $__Android_Cross_Dir/deb/
 mkdir -p $__Android_Cross_Dir/tmp/$arch/
-wget -nv -nc http://termux.net/dists/stable/main/binary-$__AndroidArch/libcurl-dev_7.53.1_$__AndroidArch.deb -O $__Android_Cross_Dir/deb/libcurl-dev_7.52.1_$__AndroidArch.deb
-wget -nv -nc http://termux.net/dists/stable/main/binary-$__AndroidArch/libcurl_7.53.1_$__AndroidArch.deb -O $__Android_Cross_Dir/deb/libcurl_7.52.1_$__AndroidArch.deb
-wget -nv -nc http://termux.net/dists/stable/main/binary-$__AndroidArch/krb5-dev_1.15.1_$__AndroidArch.deb -O $__Android_Cross_Dir/deb/krb5-dev_1.15_$__AndroidArch.deb
-wget -nv -nc http://termux.net/dists/stable/main/binary-$__AndroidArch/krb5_1.15.1_$__AndroidArch.deb -O $__Android_Cross_Dir/deb/krb5_1.15_$__AndroidArch.deb
-wget -nv -nc http://termux.net/dists/stable/main/binary-$__AndroidArch/openssl-dev_1.0.2k_$__AndroidArch.deb -O $__Android_Cross_Dir/deb/openssl-dev_1.0.2k_$__AndroidArch.deb
-wget -nv -nc http://termux.net/dists/stable/main/binary-$__AndroidArch/openssl_1.0.2k_$__AndroidArch.deb -O $__Android_Cross_Dir/deb/openssl_1.0.2k_$__AndroidArch.deb
+wget -nv -nc http://termux.net/dists/stable/main/binary-$__AndroidArch/libcurl-dev_7.54.1_$__AndroidArch.deb -O $__Android_Cross_Dir/deb/libcurl-dev_7.54.1_$__AndroidArch.deb
+wget -nv -nc http://termux.net/dists/stable/main/binary-$__AndroidArch/libcurl_7.54.1_$__AndroidArch.deb -O $__Android_Cross_Dir/deb/libcurl_7.54.1_$__AndroidArch.deb
+wget -nv -nc http://termux.net/dists/stable/main/binary-$__AndroidArch/krb5-dev_1.15.1-2_$__AndroidArch.deb -O $__Android_Cross_Dir/deb/krb5-dev_1.15.1-2_$__AndroidArch.deb
+wget -nv -nc http://termux.net/dists/stable/main/binary-$__AndroidArch/krb5_1.15.1-2_$__AndroidArch.deb -O $__Android_Cross_Dir/deb/krb5_1.15.1-2_$__AndroidArch.deb
+wget -nv -nc http://termux.net/dists/stable/main/binary-$__AndroidArch/openssl-dev_1.0.2l_$__AndroidArch.deb -O $__Android_Cross_Dir/deb/openssl-dev_1.0.2l_$__AndroidArch.deb
+wget -nv -nc http://termux.net/dists/stable/main/binary-$__AndroidArch/openssl_1.0.2l_$__AndroidArch.deb -O $__Android_Cross_Dir/deb/openssl_1.0.2l_$__AndroidArch.deb
 
 echo Unpacking Termux packages
-dpkg -x $__Android_Cross_Dir/deb/libcurl-dev_7.52.1_$__AndroidArch.deb $__Android_Cross_Dir/tmp/$__AndroidArch/
-dpkg -x $__Android_Cross_Dir/deb/libcurl_7.52.1_$__AndroidArch.deb $__Android_Cross_Dir/tmp/$__AndroidArch/
-dpkg -x $__Android_Cross_Dir/deb/krb5-dev_1.15_$__AndroidArch.deb $__Android_Cross_Dir/tmp/$__AndroidArch/
-dpkg -x $__Android_Cross_Dir/deb/krb5_1.15_$__AndroidArch.deb $__Android_Cross_Dir/tmp/$__AndroidArch/
-dpkg -x $__Android_Cross_Dir/deb/openssl-dev_1.0.2k_$__AndroidArch.deb $__Android_Cross_Dir/tmp/$__AndroidArch/
-dpkg -x $__Android_Cross_Dir/deb/openssl_1.0.2k_$__AndroidArch.deb $__Android_Cross_Dir/tmp/$__AndroidArch/
+dpkg -x $__Android_Cross_Dir/deb/libcurl-dev_7.54.1_$__AndroidArch.deb $__Android_Cross_Dir/tmp/$__AndroidArch/
+dpkg -x $__Android_Cross_Dir/deb/libcurl_7.54.1_$__AndroidArch.deb $__Android_Cross_Dir/tmp/$__AndroidArch/
+dpkg -x $__Android_Cross_Dir/deb/krb5-dev_1.15.1-2_$__AndroidArch.deb $__Android_Cross_Dir/tmp/$__AndroidArch/
+dpkg -x $__Android_Cross_Dir/deb/krb5_1.15.1-2_$__AndroidArch.deb $__Android_Cross_Dir/tmp/$__AndroidArch/
+dpkg -x $__Android_Cross_Dir/deb/openssl-dev_1.0.2l_$__AndroidArch.deb $__Android_Cross_Dir/tmp/$__AndroidArch/
+dpkg -x $__Android_Cross_Dir/deb/openssl_1.0.2l_$__AndroidArch.deb $__Android_Cross_Dir/tmp/$__AndroidArch/
 
 cp -R $__Android_Cross_Dir/tmp/$__AndroidArch/data/data/com.termux/files/usr/* $__ToolchainDir/sysroot/usr/
+
+# Generate platform file for build.sh script to assign to __DistroRid
+echo "Generating platform file..."
+echo "RID=android.21-arm64" > $__ToolchainDir/sysroot/android_platform
 
 # ifaddrs.h is not available natively Android, but a version of it is available
 # See https://github.com/termux/termux-packages/issues/338 for context

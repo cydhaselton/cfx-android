@@ -39,8 +39,13 @@ initTargetDistroRid()
     if [ $__CrossBuild == 1 ]; then
         if [ "$__BuildOS" == "Linux" ]; then
             if [ ! -e $ROOTFS_DIR/etc/os-release ]; then
-                echo "WARNING: Can not determine runtime id for current distro."
-                export __DistroRid=""
+                if [ -e $ROOTFS_DIR/android_platform ]; then
+                    source $ROOTFS_DIR/android_platform
+                    export __DistroRid="$RID"
+                else
+                    echo "WARNING: Can not determine runtime id for current distro."
+                    export __DistroRid=""
+                fi
             else
                 source $ROOTFS_DIR/etc/os-release
                 export __DistroRid="$ID.$VERSION_ID-$__BuildArch"
