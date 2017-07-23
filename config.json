@@ -9,7 +9,7 @@
     "OSGroup": {
       "description": "Sets the OS for the BuildConfigurtation you want to build.",
       "valueType": "property",
-      "values": ["Windows_NT", "Unix", "Linux", "OSX", "FreeBSD", "NetBSD"],
+      "values": ["Windows_NT", "Unix", "Linux", "OSX", "FreeBSD", "NetBSD", "Android"],
       "defaultValue": "${OSName}"
     },
     "ConfigurationGroup": {
@@ -165,7 +165,7 @@
     "HostOs": {
       "description": "OS for result binaries.",
       "valueType": "passThrough",
-      "values": ["Windows_NT", "Linux", "OSX", "FreeBSD", "NetBSD"],
+      "values": ["Windows_NT", "Linux", "OSX", "FreeBSD", "NetBSD", "Android"],
       "defaultValue": "${OSName}"
     },
     "ProcessorCount": {
